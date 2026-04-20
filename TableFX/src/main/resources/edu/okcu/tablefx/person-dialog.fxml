@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="400.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="edu.okcu.tablefx.PersonDialogController">
+    <Label style="-fx-font-size: 20px" text="Add Person" fx:id="dialogTitle" />
+
+    <HBox spacing="20.0">
+        <Label text="First Name:" />
+        <TextField fx:id="txtFirstName" />
+      <padding>
+         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+      </padding>
+      <VBox.margin>
+         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      </VBox.margin>
+    </HBox>
+    <HBox spacing="20.0">
+        <Label text="Last Name:" />
+        <TextField fx:id="txtLastName" />
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+        <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </VBox.margin>
+    </HBox>
+    <HBox spacing="20.0">
+        <Label text="Email:" />
+        <TextField fx:id="txtEmail" />
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+        <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </VBox.margin>
+    </HBox>
+    <HBox spacing="20.0">
+        <Label text="Age:" />
+        <TextField fx:id="txtAge" />
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+        <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </VBox.margin>
+    </HBox>
+    <HBox spacing="20.0">
+        <Button text="Save" onAction="#onSave" />
+        <Button text="Cancel" onAction="#onCancel" />
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+        <VBox.margin>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </VBox.margin>
+    </HBox>
+
+</VBox>
