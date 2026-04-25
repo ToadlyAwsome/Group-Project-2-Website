@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="15"
+      style="-fx-padding: 50; -fx-alignment: center; -fx-background-color: #f0f4f8;"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="edu.okcu.tablefx.LoginController">
+
+    <Label text="School Registration"
+           style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+
+    <Label text="Please log in to continue"
+           style="-fx-font-size: 13px; -fx-text-fill: #7f8c8d;"/>
+
+    <TextField fx:id="usernameField" promptText="Username"
+               style="-fx-font-size: 14px; -fx-pref-width: 280; -fx-pref-height: 35;"/>
+
+    <PasswordField fx:id="passwordField" promptText="Password"
+                   style="-fx-font-size: 14px; -fx-pref-width: 280; -fx-pref-height: 35;"/>
+
+    <HBox spacing="30" style="-fx-alignment: center;">
+        <RadioButton fx:id="studentRadio" text="Student">
+            <toggleGroup><ToggleGroup fx:id="roleGroup"/></toggleGroup>
+        </RadioButton>
+        <RadioButton fx:id="professorRadio" text="Professor"
+                     toggleGroup="$roleGroup"/>
+    </HBox>
+
+    <Button text="Login" onAction="#onLoginClick"
+            style="-fx-background-color: #2980b9; -fx-text-fill: white;
+                   -fx-font-size: 14px; -fx-pref-width: 280; -fx-pref-height: 38;
+                   -fx-cursor: hand; -fx-background-radius: 5;"/>
+
+    <Label fx:id="messageLabel"
+           style="-fx-text-fill: #27ae60; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+
+</VBox>
