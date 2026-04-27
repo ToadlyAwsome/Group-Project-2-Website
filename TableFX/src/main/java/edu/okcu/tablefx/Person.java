@@ -16,10 +16,10 @@ public class Person {
 
     public Person() {
         this.id = generateId();
-        this.firstName = "NA";
-        this.lastName = "NA";
-        this.email = "NA";
-        this.age = 100;
+        this.firstName = "New Course";
+        this.lastName = "Professor";
+        this.email = "Room";
+        this.age = 0;
     }
 
     public Person(String firstName, String lastName, String email, int age) {
@@ -81,11 +81,15 @@ public class Person {
     public static ObservableList<Person> getDummyData() {
         ObservableList<Person> people = FXCollections.observableArrayList();
 
-        Person person1 = new Person(1, "Jeff", "Maxwell", "jmaxwell@okcu.edu", 55);
-        Person person2 = new Person(2, "Tom", "Hanks", "tom@hanks.com", 65);
+        Person class1 = new Person(101, "Java II", "Dr. Smith", "CS201", 24);
+        Person class2 = new Person(205, "Calculus", "Prof. Johnson", "MH110", 31);
+        Person class3 = new Person(330, "Database", "Dr. Brown", "CS105", 18);
+        Person class4 = new Person(410, "Physics", "Dr. Miller", "SCI220", 27);
 
-        people.add(person1);
-        people.add(person2);
+        people.add(class1);
+        people.add(class2);
+        people.add(class3);
+        people.add(class4);
 
         return people;
     }

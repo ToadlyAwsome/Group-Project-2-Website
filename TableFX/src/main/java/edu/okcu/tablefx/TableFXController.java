@@ -60,7 +60,7 @@ public class TableFXController {
             return;
         }
 
-        if(confirmDelete(selectedPerson) == false) {
+        if (confirmDelete(selectedPerson) == false) {
             return;
         }
 
@@ -124,15 +124,40 @@ public class TableFXController {
 
     public void onLoadFromFile(ActionEvent actionEvent) {
         try {
-            ObservableList<Person> allRecords = FileUtil.loadFromFile(Paths.get("./people.txt"));
+            ObservableList<Person> allRecords = FileUtil.loadFromFile(Paths.get("./classes.txt"));
             people.setAll(allRecords);
 
-        } catch (Exception ex) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Load Classes");
+            alert.setHeaderText(null);
+            alert.setContentText("Classes loaded successfully.");
+            alert.showAndWait();
 
+        } catch (Exception ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Load Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Could not load classes from file.");
+            alert.showAndWait();
         }
     }
 
-    public void onSaveToFile(ActionEvent actionEvent) throws IOException {
-        FileUtil.saveToFile(Paths.get("./people.txt"),people);
+    public void onSaveToFile(ActionEvent actionEvent) {
+        try {
+            FileUtil.saveToFile(Paths.get("./classes.txt"), people);
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Save Classes");
+            alert.setHeaderText(null);
+            alert.setContentText("Classes saved successfully.");
+            alert.showAndWait();
+
+        } catch (Exception ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Save Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Could not save classes to file.");
+            alert.showAndWait();
+        }
     }
 }

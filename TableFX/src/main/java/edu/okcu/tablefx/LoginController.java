@@ -1,6 +1,10 @@
 package edu.okcu.tablefx;
+
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 
 public class LoginController {
 
@@ -16,19 +20,35 @@ public class LoginController {
         String password = passwordField.getText().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            messageLabel.setText("Please enter your username and password.");
+            messageLabel.setText("Please enter username and password.");
             return;
         }
 
         if (!studentRadio.isSelected() && !professorRadio.isSelected()) {
-            messageLabel.setText("Please select Student or Professor.");
+            messageLabel.setText("Select Student or Professor.");
             return;
         }
 
-        if (studentRadio.isSelected()) {
-            messageLabel.setText("Welcome, Student: " + username + "!");
-        } else {
-            messageLabel.setText("Welcome, Professor: " + username + "!");
+        try {
+            if (professorRadio.isSelected()) {
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("main-view.fxml"));
+                Scene scene = new Scene(loader.load());
+
+                Stage stage = new Stage();
+                stage.setTitle("Professor Dashboard");
+                stage.setScene(scene);
+                stage.show();
+
+                messageLabel.setText("Welcome Professor " + username);
+
+            } else {
+                messageLabel.setText("Welcome Student " + username);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            messageLabel.setText("Error opening screen.");
         }
     }
 }
