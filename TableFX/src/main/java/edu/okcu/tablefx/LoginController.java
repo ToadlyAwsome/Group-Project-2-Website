@@ -43,6 +43,14 @@ public class LoginController {
                 messageLabel.setText("Welcome Professor " + username);
 
             } else {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("student.fxml"));
+                Scene scene = new Scene(loader.load());
+
+                Stage stage = new Stage();
+                stage.setTitle("Student Dashboard");
+                stage.setScene(scene);
+                stage.show();
+
                 messageLabel.setText("Welcome Student " + username);
             }
 
