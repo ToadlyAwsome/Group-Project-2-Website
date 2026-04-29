@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,10 @@ public class StudentController {
     // Add a path to the data file (relative to working directory)
     private static final Path DATA_FILE = Paths.get("students.txt");
 
+    // current logged in user/pw (set by LoginController)
+    private String currentUser = null;
+    private String currentPass = null;
+
     @FXML
     public void initialize() {
 
@@ -41,9 +46,6 @@ public class StudentController {
         profColumn.setCellValueFactory(data -> data.getValue().profProperty());
 
         classTable.setItems(classes);
-
-        // load persisted classes from file
-        loadFromFile();
 
         classTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, sel) -> {
             if (sel != null) {
@@ -56,8 +58,19 @@ public class StudentController {
         });
     }
 
+    // Public setter called by LoginController after loading the FXML
+    public void setCredentials(String username, String password) {
+        this.currentUser = username;
+        this.currentPass = password;
+        loadFromFile();
+        classTable.setItems(classes);
+        classTable.refresh();
+    }
+
     @FXML
     private void handleAddClass(ActionEvent event) {
+        if (!ensureLoggedIn()) return;
+
         String code = codeField.getText().trim();
         String name = nameField.getText().trim();
         String prof = profField.getText().trim();
@@ -71,12 +84,14 @@ public class StudentController {
         clearForm();
         classTable.getSelectionModel().select(sc);
 
-        // persist changes
+        // persist changes for current user
         saveToFile();
     }
 
     @FXML
     private void handleUpdateClass(ActionEvent event) {
+        if (!ensureLoggedIn()) return;
+
         StudentClass selected = classTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
 
@@ -97,6 +112,8 @@ public class StudentController {
 
     @FXML
     private void handleDeleteClass(ActionEvent event) {
+        if (!ensureLoggedIn()) return;
+
         StudentClass selected = classTable.getSelectionModel().getSelectedItem();
         if (selected == null) return;
         classes.remove(selected);
@@ -113,29 +130,64 @@ public class StudentController {
         classTable.getSelectionModel().clearSelection();
     }
 
-    // Load classes from students.txt (format: id|CourseRoom|CourseName|Professor)
+    // NEW: simple check that a user is logged in; show a brief alert if not.
+    private boolean ensureLoggedIn() {
+        if (currentUser != null && currentPass != null) return true;
+        Alert a = new Alert(Alert.AlertType.WARNING, "Please log in before modifying classes.", ButtonType.OK);
+        a.showAndWait();
+        return false;
+    }
+
+    // Load classes from students.txt (supports both formats:
+    // old: username|password|id|CourseRoom|CourseName|Professor
+    // new: username|id|CourseRoom|CourseName|Professor )
     private void loadFromFile() {
+        classes.clear();
+        idGenerator.set(1);
+        if (currentUser == null) {
+            return;
+        }
         if (!Files.exists(DATA_FILE)) {
-            // nothing to load
             return;
         }
         try {
             List<String> lines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
             int maxId = 0;
-            classes.clear();
             for (String line : lines) {
                 if (line == null || line.trim().isEmpty()) continue;
                 String[] parts = line.split("\\|", -1);
-                if (parts.length < 4) continue;
+                if (parts.length < 3) continue;
+
+                // owner is always at index 0
+                String u = parts[0];
+                if (!u.equals(currentUser)) continue;
+
+                // determine id index: old format has id at index 2, new format at index 1
+                int idIndex;
+                if (parts.length >= 6) {
+                    // likely old format: username|password|id|code|name|prof
+                    idIndex = 2;
+                } else {
+                    // new format: username|id|code|name|prof
+                    idIndex = 1;
+                }
+                if (parts.length <= idIndex) continue;
+
                 int id;
                 try {
-                    id = Integer.parseInt(parts[0]);
-                } catch (NumberFormatException e) {
+                    id = Integer.parseInt(parts[idIndex]);
+                } catch (NumberFormatException ex) {
                     continue;
                 }
-                String code = parts[1];
-                String name = parts[2];
-                String prof = parts[3];
+
+                // compute indices for code/name/prof relative to idIndex
+                int codeIdx = idIndex + 1;
+                int nameIdx = idIndex + 2;
+                int profIdx = idIndex + 3;
+                String code = codeIdx < parts.length ? parts[codeIdx] : "";
+                String name = nameIdx < parts.length ? parts[nameIdx] : "";
+                String prof = profIdx < parts.length ? parts[profIdx] : "";
+
                 classes.add(new StudentClass(id, code, name, prof));
                 if (id > maxId) maxId = id;
             }
@@ -145,18 +197,47 @@ public class StudentController {
         }
     }
 
-    // Save all classes to students.txt (overwrites file)
+    // Save all classes for the current user to students.txt (preserve other users' lines)
+    // Normalized format written: username|id|CourseRoom|CourseName|Professor
     private void saveToFile() {
+        if (currentUser == null) {
+            Alert a = new Alert(Alert.AlertType.WARNING, "Please log in before saving.", ButtonType.OK);
+            a.showAndWait();
+            return;
+        }
         try {
-            // prepare lines
-            List<String> lines = classes.stream()
-                    .map(sc -> sc.getId() + "|" + sc.getCode() + "|" + sc.getName() + "|" + sc.getProf())
+            List<String> existing = Files.exists(DATA_FILE)
+                    ? Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8)
+                    : new ArrayList<>();
+
+            // Keep lines that are NOT for the current user (compare username at index 0)
+            List<String> others = existing.stream()
+                    .filter(line -> {
+                        if (line == null || line.trim().isEmpty()) return true;
+                        String[] parts = line.split("\\|", -1);
+                        if (parts.length == 0) return true;
+                        String u = parts[0];
+                        return !u.equals(currentUser);
+                    })
                     .collect(Collectors.toList());
-            // ensure parent exists (if using a nested path) then write
-            Files.write(DATA_FILE, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            // Append current user's class lines in normalized format
+            List<String> myLines = classes.stream()
+                    .map(sc -> currentUser + "|" + sc.getId() + "|" + escape(sc.getCode()) + "|" + escape(sc.getName()) + "|" + escape(sc.getProf()))
+                    .collect(Collectors.toList());
+
+            others.addAll(myLines);
+
+            // write back entire file
+            Files.write(DATA_FILE, others, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // Helper to escape pipe characters in fields (simple replacement)
+    private String escape(String s) {
+        return s == null ? "" : s.replace("|", " ");
     }
 
     // NEW: allow explicit Save from the UI
@@ -165,15 +246,13 @@ public class StudentController {
         saveToFile();
     }
 
-    // NEW: allow explicit Load from the UI (refresh the table)
+    // NEW: allow explicit Load from the UI (reload from file for current user)
     @FXML
     private void handleLoadFile(ActionEvent event) {
         loadFromFile();
-        // ensure the TableView shows the newly loaded data
         classTable.setItems(classes);
         classTable.refresh();
     }
-
 
     public static class StudentClass {
         private final SimpleIntegerProperty id;

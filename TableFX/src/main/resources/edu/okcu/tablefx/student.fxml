@@ -16,6 +16,7 @@
         <VBox spacing="10.0" AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0"
               AnchorPane.rightAnchor="10.0" AnchorPane.bottomAnchor="10.0">
             <children>
+                <!-- Login handled by login.fxml / LoginController; removed login row here -->
                 <Label text="Student Classes" />
 
                 <TableView fx:id="classTable" prefHeight="250.0">
