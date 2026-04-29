@@ -50,6 +50,8 @@
                         <Button text="Add" onAction="#handleAddClass" />
                         <Button text="Update" onAction="#handleUpdateClass" />
                         <Button text="Delete" onAction="#handleDeleteClass" />
+                        <Button text="Save" onAction="#handleSaveFile" />
+                        <Button text="Load" onAction="#handleLoadFile" />
                     </children>
                 </HBox>
             </children>
