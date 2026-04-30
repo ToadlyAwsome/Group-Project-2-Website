@@ -1,8 +1,6 @@
 package edu.okcu.tablefx;
 
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,16 +8,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.MouseButton;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 
 public class TableFXController {
+
     @FXML
     TableView<Person> personTableView;
     @FXML
@@ -33,6 +31,9 @@ public class TableFXController {
     @FXML
     TableColumn<Person, Integer> ageColumn;
 
+    @FXML
+    private TextArea studentListArea;
+
     private ObservableList<Person> people;
 
     public void initialize() {
@@ -44,6 +45,13 @@ public class TableFXController {
 
         people = Person.getDummyData();
         personTableView.setItems(people);
+
+        // LISTENER FOR SELECTED CLASS
+        personTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                loadStudentsForClass(newSel);
+            }
+        });
     }
 
     @FXML
@@ -56,13 +64,9 @@ public class TableFXController {
 
     public void onDeletePerson(ActionEvent actionEvent) {
         Person selectedPerson = personTableView.getSelectionModel().getSelectedItem();
-        if (selectedPerson == null) {
-            return;
-        }
+        if (selectedPerson == null) return;
 
-        if (confirmDelete(selectedPerson) == false) {
-            return;
-        }
+        if (!confirmDelete(selectedPerson)) return;
 
         people.remove(selectedPerson);
     }
@@ -72,54 +76,42 @@ public class TableFXController {
         ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "", deleteButton, cancelButton);
-        alert.setTitle("Delete Person");
-        alert.setHeaderText("Delete Selected Person?");
-        alert.setContentText("Remove " + person.getEmail() + " " + person.getLastName());
-        Optional<ButtonType> result = alert.showAndWait();
+        alert.setTitle("Delete Class");
+        alert.setHeaderText("Delete Selected Class?");
+        alert.setContentText("Remove " + person.getFirstName());
 
+        Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == deleteButton;
     }
 
     public void onUpdatePerson(ActionEvent actionEvent) throws IOException {
         Person selectedPerson = personTableView.getSelectionModel().getSelectedItem();
-        if (selectedPerson == null) {
-            return;
-        }
+        if (selectedPerson == null) return;
 
         Person updatedPerson = showPersonDialog(selectedPerson);
         if (updatedPerson != null) {
             personTableView.refresh();
-            personTableView.getSelectionModel().select((updatedPerson));
+            personTableView.getSelectionModel().select(updatedPerson);
         }
     }
 
     private Person showPersonDialog(Person person) throws IOException {
-        try {
-            String title = "Update Person";
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("person-dialog.fxml"));
-            Parent root = loader.load();
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("person-dialog.fxml"));
+        Parent root = loader.load();
 
-            PersonDialogController controller = loader.getController();
+        PersonDialogController controller = loader.getController();
 
-            Stage stage = new Stage();
-            if (person == null) {
-                title = "Add Person";
-            }
-            stage.setTitle(title);
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
+        Stage stage = new Stage();
+        stage.setTitle(person == null ? "Add Class" : "Update Class");
+        stage.setScene(new Scene(root));
+        stage.initModality(Modality.APPLICATION_MODAL);
 
-            controller.setDialogStage(stage);
-            controller.setPerson(person);
+        controller.setDialogStage(stage);
+        controller.setPerson(person);
 
-            stage.showAndWait();
+        stage.showAndWait();
 
-            Person personRecord = controller.getCreatedPerson();
-            return personRecord;
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            throw ex;
-        }
+        return controller.getCreatedPerson();
     }
 
     public void onLoadFromFile(ActionEvent actionEvent) {
@@ -129,15 +121,13 @@ public class TableFXController {
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Load Classes");
-            alert.setHeaderText(null);
             alert.setContentText("Classes loaded successfully.");
             alert.showAndWait();
 
         } catch (Exception ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Load Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Could not load classes from file.");
+            alert.setContentText("Could not load classes.");
             alert.showAndWait();
         }
     }
@@ -148,16 +138,42 @@ public class TableFXController {
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Save Classes");
-            alert.setHeaderText(null);
             alert.setContentText("Classes saved successfully.");
             alert.showAndWait();
 
         } catch (Exception ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Save Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Could not save classes to file.");
+            alert.setContentText("Could not save classes.");
             alert.showAndWait();
+        }
+    }
+
+    // ✅ STUDENT LOADING METHOD (NOW CORRECT POSITION)
+    private void loadStudentsForClass(Person selectedClass) {
+        try {
+            String className = selectedClass.getFirstName();
+            String result = "";
+
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(java.nio.file.Paths.get("students.txt"));
+            for (String line : lines) {
+                if (line.startsWith(className)) {
+                    String[] parts = line.split(":");
+                    if (parts.length > 1) {
+                        result = parts[1].trim().replace(",", "\n");
+                    }
+                    break;
+                }
+            }
+
+            if (result.isEmpty()) {
+                result = "No students found.";
+            }
+
+            studentListArea.setText(result);
+
+        } catch (Exception e) {
+            studentListArea.setText("Error loading students.");
         }
     }
 }
